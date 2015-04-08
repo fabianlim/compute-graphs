@@ -1,0 +1,72 @@
+\title{Optimizing compute graphs}
+
+\documentclass[12pt]{article}
+
+\usepackage{pgf,tikz}
+
+\begin{document}
+\maketitle
+
+\input{definitions.tex}
+
+\section{Enumeration}
+
+Assumption: Only care about functions $f$ that are multivariate polynomials,
+e.g., 
+\[
+    f = f(X_1, X_2, \cdots, X_n).
+\]
+I am going to ignore division for now. 
+I also don't really know how to handle the coefficients, I am somehow magically
+assuming they don't exist (you will see later).
+
+Definition: Compute graph $\CompG$ is a ``representation'' of some function $f$.
+Each function $f$ is ``represented'' by multiple compute graphs.
+Consider the following ``recursive'' definition of $\CompG$:
+A compute graph $\CompG$ is said to be $k$-computation of a multivariate
+polynomial $f$, if $f$ satisifes
+\[
+    f = g(p_1, p_2, \cdots, p_k)
+\]
+where 
+i) g is a $k$-variate polynomial, and 
+ii) $p_i$ are polynomials in $X_1, \cdots, X_n$ that have $k$-computation
+representations by ``children'' graphs of $\CompG$. 
+The motivation for $k$-computations from practical standpoints, is that the
+maximum number of mults/adder is $k$. 
+You can also limit the number of adds but that is a simple generalization.
+Since I ignore division the polynomials $p_i$ must have smaller degree than $f$.
+
+The below computation graph is a $2$-computation representation of $f$.
+\begin{tikzpicture}
+    \node {$f$} [grow=up]
+        child { node {$+$}
+                child { node {$p_1$}}
+                child { node {$p_2$}}
+                child { node {$*$}
+                    child {node {$p_3$}}
+                    child {node {$p_1$}}
+                }
+            };
+\end{tikzpicture}
+
+I am interested enumerating all possible $k$-computations of some multivariate
+polynomial $f$.
+If we can enumerate, we can pick the one with some smallest cost.
+
+General idea: Maintain a pool of multivariate polynomials. 
+Build larger degree polynomials by ``combining'' them via $k$-variate polynomials.  
+We have to limit the pool by quickly eliminating polynomials that we know cannot
+build $f$. 
+We can use the following observation to eliminate candidates.
+
+Observation: If a polynomial $p$ can be used to build $f$, then any monomial of
+$p$ must divide some monomial of $f$. 
+
+Example: A trite one, $f = X_1^n$. In this case, any polynomial $p$ that is a
+function of any $X_2, \cdots$ is eliminated.
+
+Example: Consider $f = X_1 X_2 + X_2 X_3 + X_1 X_3$. In this case, any
+polynomial $p$ that has multiple variates, e.g. $X_2^2 X_3$, is eliminated.
+
+\end{document}
