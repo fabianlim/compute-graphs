@@ -4,10 +4,13 @@
 
 \usepackage{pgf,tikz}
 
+\author{author}
+
 \begin{document}
 \maketitle
 
 \input{definitions.tex}
+
 
 \section{Enumeration}
 
@@ -16,7 +19,7 @@ e.g.,
 \[
     f = f(X_1, X_2, \cdots, X_n).
 \]
-I am going to ignore division for now. 
+I am going to ignore division and minus for now. 
 I also don't really know how to handle the coefficients, I am somehow magically
 assuming they don't exist (you will see later).
 
@@ -35,19 +38,20 @@ representations by ``children'' graphs of $\CompG$.
 The motivation for $k$-computations from practical standpoints, is that the
 maximum number of mults/adder is $k$. 
 You can also limit the number of adds but that is a simple generalization.
-Since I ignore division the polynomials $p_i$ must have smaller degree than $f$.
+Since I ignore division the polynomials $p_i$ must have degree at most that of $f$.
+
 
 The below computation graph is a $2$-computation representation of $f$.
 \begin{tikzpicture}
-    \node {$f$} [grow=up]
-        child { node {$+$}
-                child { node {$p_1$}}
-                child { node {$p_2$}}
-                child { node {$*$}
-                    child {node {$p_3$}}
-                    child {node {$p_1$}}
-                }
-            };
+\node {$f$} [grow'=up]
+    child { node {$+$}
+            child { node {$p_1$} }
+            child { node {$p_2$} }
+            child { node {$*$}
+                child {node {$p_3$} }
+                child {node {$p_1$} }
+            }
+        };
 \end{tikzpicture}
 
 I am interested enumerating all possible $k$-computations of some multivariate
@@ -68,5 +72,60 @@ function of any $X_2, \cdots$ is eliminated.
 
 Example: Consider $f = X_1 X_2 + X_2 X_3 + X_1 X_3$. In this case, any
 polynomial $p$ that has multiple variates, e.g. $X_2^2 X_3$, is eliminated.
+
+Example: Why this fails with minus. Very simple. We could have the following
+where $q$ could be an arbitrary large degree polynomial.
+
+\begin{tikzpicture}
+\node {$f$} [grow'=up]
+    child { node {$+$}
+        child { node {$p_1 - q$} }
+        child { node {$p_2 + q$} }
+        };
+\end{tikzpicture}
+Similar bad things will happen with divide.
+
+Example: Hardamard transform. This is the Kronecker power of the matrix
+\[
+\left[
+    \begin{array}{cc}
+        1 & 1 \\ 1 & -1
+    \end{array}
+\right]
+\]
+The $2 \times 2$ transform is given by the polynomials $X_1 + X_2$ and
+$X_1 - X_2$. The $4 \times 4$ transform is 
+\begin{eqnarray}
+    X_1 + X_2 + X_3 + X_4 \\
+    X_1 - X_2 + X_3 - X_4 \\
+    X_1 + X_2 - (X_3 + X_4) \\
+    X_1 - X_2 - (X_3 - X_4) 
+\end{eqnarray}
+The following $1$-computation graph represents (all rows of the) Kronecker transform 
+(or actually any Kronecker matrix product). 
+\begin{tikzpicture}
+\node {$f_n$} [grow'=up]
+    child { node {$+$}
+        child { node {$f_{n-1}$} }
+        child { node {$f_{n-1}$} }
+        };
+\end{tikzpicture}
+where $f_n$ is a row of the $2^n \times 2^n$ Hardamard transform. 
+We simply need to adjust for the coefficients $1/-1$. 
+This particular computation graph will achieve the smallest depth
+(i.e., $\log(n)$ for each row).
+There are of course other compute graphs, but the polynomial that represents all
+rows of the $2^n \times 2^n$ transform has the general form
+\[
+    f_n = \sum_{i=1}^{2^n} \prod_{j=1}^m a_{ij} X_i, 
+\]
+where the coefficients $a_{ij}$ come from the Kronecker product. 
+To achieve $n \log(n)$ total operations, there must be term reuse (recall the
+butterfly structures) so we would have to optimize $2^n$ compute graphs
+simulataneously. 
+In this case we only need to maintain the pool of univariate polynomials in
+$X_1, X_2, \cdots, X_n$. 
+
+
 
 \end{document}
